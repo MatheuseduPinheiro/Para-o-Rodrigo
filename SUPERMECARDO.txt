@@ -1,0 +1,180 @@
+# 04100377 - Murilo Victor Silva dos Santos
+# 04100550 - Vitor Carrera dos Santos
+# 04078586 - Matheus Eduardo Lima Pinheiro
+# 04079514 - Davi Bernardes Botelho de Andrade
+
+from queue import Queue
+from random import randint
+from time import sleep
+
+# Dicionario que lista os produtos
+base = {
+1: ["Detergente", 4.99, 10],
+2: ["Sabão", 3.99, 15],
+3: ["Arroz", 6.99, 25],
+4: ["Carne", 5.99, 20],
+5: ["Biscoito", 1.99, 8],
+6: ["Massa de Pastel", 5.99, 5],
+7: ["Refrigerante Tuchaua", 6.99, 13],
+8: ["Barra de Chocolate", 5.99, 2],
+9: ["Frango", 7.99, 6],
+10: ["Pizza", 3.99, 2]
+}
+      
+# Fila que lista os pedidos
+fila = Queue(maxsize = 5)
+
+# FUNÇÃO DE MENU
+def menu():
+  print("\n  <  <  <  <  <   SUPERMERCADO   >  >  >  >  > ")
+  print("\n 1 - Listar Produtos.")
+  print(" 2 - Inserir Produto.")
+  print(" 3 - Remover Produto.")
+  print(" 4 - Registrar Item do Cliente.")
+  escolha = int(input("\n Opção Escolhida: "))
+
+  if escolha == 1:
+  	listar_produtos()
+  	
+  elif escolha == 2:
+  	inserir_produto()
+  	
+  elif escolha == 3:
+  	remover_produto()
+  	
+  elif escolha == 4:
+  	registrar_pedido()
+  	
+  else:
+  	print(f"\nA opção {escolha} não existe!")
+
+# FUNÇÃO DE LISTAR PRODUTOS
+
+def listar_produtos():
+  print("\n - - - - - - - Lista de Produtos - - - - - - -")
+  for cod, elementos in base.items():
+    nome, preco, quant = elementos
+    print(f"\nCodigo: {cod}")
+    print(f"Nome: {nome}")
+    print(f"Preço: R${preco:.2f}")
+    print(f"Quantidade: {quant}")
+
+# FUNÇÃO DE INSERIR PRODUTOS
+
+def inserir_produto():
+
+  def atualizar_quant(qtd):
+    print("\nEstoque Zerado!")
+    print("\nReabastecendo...")
+    sleep(3)
+    quant = randint(10, 30)
+    print(f"\nQuantidade inserida: {quant}")
+    return quant
+
+  print("\n- - - - - - Inserir Produto - - - - - - -")
+  codigo = int(input("\nCodigo: "))
+  if codigo in base.keys():
+    n, p, q = base[codigo]
+   # Checar se estoque esta vazio
+    if q == 0:
+      qtd = atualizar_quant(q)
+      base[codigo][2] = qtd
+      inserir = False
+  else:
+    nome = str(input("Nome: ")).title()
+    preco = float(input("Preço: "))
+    quant = int(input("Quantidade: "))
+    inserir = True
+    
+  # Não permite dois produtos com o mesmo codigo
+  for c in base.keys():
+    if c == codigo and q != 0:
+      print(f"\nO código {codigo} já pertence a um produto!")
+      inserir = False
+      
+  # Se o codigo não estiver na base pode inserir
+  if codigo not in base:
+    inserir = True
+    
+  #Inserir produto
+  if inserir == True:
+    base[codigo] = [nome, preco, quant]
+    print(f"\nProduto inserido com sucesso!")
+
+# FUNÇÃO DE REMOVER PRODUTO
+def remover_produto():
+  print("\n- - - - - - Remover Produto - - - - - - -")
+  cod = int(input("\nCódigo do Produto: "))
+  if cod not in base:
+    print("\nEsse produto não existe!")
+  else:
+    n, p, q = base[cod]
+    print(f"\nO item {n} foi removido!")
+    del base[cod]
+
+# FUNÇÃO DE REGISTRAR ITEM DO CLIENTE
+
+def registrar_pedido():
+  valor = []
+  
+  while fila.full() == False:
+  	cliente = str(input("\nNome do Cliente: ")).title()
+  	item = int(input("Código do Produto: "))
+  	quant_item = int(input("Quantidade: "))
+  	
+  	if item not in base:
+  		print("\nEsse produto não existe!")
+  		break
+  		
+  	n, p, q = base[item]
+  	# Se o estoque estiver zerado
+  	if q <= 0:
+  		print(f"\nO {n} está em falta no estoque!")
+  		# Verificar se deseja fazer mais pedido
+  		outro_pedido = int(input("\nGostaria de outro produto? [1 - Sim / 2 - Não]\n"))
+  		if outro_pedido == 1:
+  			registrar_pedido()
+  		elif outro_pedido == 2:
+  			break
+  		else:
+  			print("\nApenas 1 ou 2!")
+  	
+  	# Se não tiver a quantidade desejada
+  	elif quant_item > q:
+  		print("\nNão temos a quantidade solicitada!")
+  		print(f"Voce pediu {quant_item} e a quantidade no estoque é {q}.")
+  	# Se tiver a quantidade desejada
+  	else:
+  		print("\nPedido feito com sucesso!")
+  		fila.put([cliente, item, quant_item])
+  		# Calculo do total a pagar
+  		valor.append(p * quant_item)
+  		# Quantidade do produto é reduzida
+  		q -= quant_item
+  		base[item] = n, p, q
+  	
+  	def atendimento(caixa):
+  		if caixa == 1:
+  			print("\n # # # #  CAIXA 1 Livre  # # # #")
+  		elif caixa == 2:
+  			print("\n # # # #  CAIXA 2 Livre  # # # #")
+  		else:
+  			print("\n # # # #  CAIXA 3 Livre  # # # #")
+  	
+  # Atender se fila estiver cheia
+  if fila.full():
+  	print("\nIniciando Atendimento...")
+  	for i in range(fila.qsize()):
+  		sleep(5)
+  		caixa = randint(1, 3)
+  		atendimento(caixa)
+  		cliente, codigo, quant = fila.get()
+  		print(f"\n > > > > > ATENDIMENTO [ Caixa {caixa} ]")
+  		print(f"\nCliente: {cliente}")
+  		print(f"Código: {codigo}")
+  		print(f"Quantidade: {quant}")
+  		print(f"Valor Total R$ {valor[i]:.2f}")
+
+# INICIO DO CODIGO
+while True:
+	menu()
